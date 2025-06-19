@@ -34,6 +34,22 @@ class FileReadingTest {
             try {
               const response = JSON.parse(line);
               console.log(`Response ${response.id}:`, JSON.stringify(response, null, 2));
+
+              if (response.id === 2 && response.result && response.result.tools && response.result.tools.length > 0) {
+                const toolSchema = response.result.tools[0];
+                if (toolSchema.name === 'read_docs_by_list') {
+                  const filesProp = toolSchema.inputSchema.properties.files;
+                  if (typeof filesProp.pattern !== 'undefined') {
+                    console.error('Test Error: files.pattern should be undefined. Got:', filesProp.pattern);
+                    process.exitCode = 1; // Mark test as failed
+                  }
+                  const expectedPattern = "^[^\\x00-\\x1f;&|`$(){}\\[\\]<>'\"\\\\]+\\.(pdf|doc|docx|html|htm)$";
+                  if (filesProp.items.pattern !== expectedPattern) {
+                    console.error('Test Error: files.items.pattern is incorrect. Got:', filesProp.items.pattern, 'Expected:', expectedPattern);
+                    process.exitCode = 1; // Mark test as failed
+                  }
+                }
+              }
               
               // Send next request if available
               requestIndex++;
@@ -135,14 +151,22 @@ class FileReadingTest {
       console.log(`Test file location: ${this.testFile}\n`);
       const result = await this.runServer(requests);
       
+      if (result.error && result.error.includes("Current directory not allowed: /")) {
+        // Explicitly throw to ensure CI picks this up as a hard failure
+        throw new Error("Test failed: Found 'Current directory not allowed: /' in stderr");
+      }
+
       console.log('\n✨ Test completed!');
       console.log(`Exit code: ${result.code}`);
       
       if (result.error) {
-        console.log('\nServer errors:', result.error);
+        // stderr content is already printed by server.stderr.on('data')
+        // but we can add a summary here if needed or ensure it's not empty if errors are expected
       }
+      // If process.exitCode was set by an assertion, it will be used
     } catch (error) {
       console.error('❌ Test failed:', error);
+      process.exitCode = 1; // Ensure test fails in CI
     }
   }
 }

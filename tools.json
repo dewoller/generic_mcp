@@ -11,9 +11,9 @@
           "description": "Array of document paths to read (supports .pdf, .doc, .docx, .html, .htm)",
           "required": true,
           "items": {
-            "type": "string"
-          },
-          "pattern": "^[^\\x00-\\x1f;&|`$(){}\\[\\]<>'\"\\\\]+\\.(pdf|doc|docx|html|htm)$"
+            "type": "string",
+            "pattern": "^[^\\x00-\\x1f;&|`$(){}\\[\\]<>'\"\\\\]+\\.(pdf|doc|docx|html|htm)$"
+          }
         }
       },
       "allowedDirectories": ["/Users/dewoller"],

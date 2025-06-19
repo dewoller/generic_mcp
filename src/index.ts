@@ -11,6 +11,7 @@ import { spawn } from "child_process";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import * as os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +30,7 @@ const ToolConfigSchema = z.object({
     pattern: z.string().optional(),
     items: z.object({
       type: z.enum(["string", "number", "boolean"]).optional(),
+      pattern: z.string().optional(),
     }).optional(),
   })).default({}),
   allowedDirectories: z.array(z.string()).optional(),
@@ -95,12 +97,27 @@ class ConfigurableCommandServer {
           type: "object",
           properties: Object.entries(toolConfig.parameters).reduce(
             (acc, [key, param]) => {
-              acc[key] = {
+              const paramDefinition: any = {
                 type: param.type,
                 description: param.description,
                 default: param.default,
-                pattern: param.pattern,
               };
+
+              if (param.type === "array") {
+                paramDefinition.items = {};
+                if (param.items?.type) {
+                  paramDefinition.items.type = param.items.type;
+                }
+                if (param.items?.pattern) {
+                  paramDefinition.items.pattern = param.items.pattern;
+                }
+                // Ensure pattern is not set at the top level for arrays
+              } else {
+                if (param.pattern) {
+                  paramDefinition.pattern = param.pattern;
+                }
+              }
+              acc[key] = paramDefinition;
               return acc;
             },
             {} as any
@@ -377,6 +394,7 @@ class ConfigurableCommandServer {
         stdio: ["pipe", "pipe", "pipe"],
         timeout: options.timeout || 30000,
         killSignal: "SIGTERM",
+        cwd: os.tmpdir(),
       });
 
       let stdout = "";
