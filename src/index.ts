@@ -201,7 +201,7 @@ class ConfigurableCommandServer {
       const configContent = await fs.readFile(this.configPath, "utf-8");
       const rawConfig = JSON.parse(configContent);
       this.config = ConfigSchema.parse(rawConfig);
-      console.error(`Loaded configuration from ${this.configPath}`);
+      console.log(`Loaded configuration from ${this.configPath}`);
     } catch (error) {
       console.error(`Failed to load configuration: ${error}`);
       // Load default configuration
@@ -452,7 +452,7 @@ class ConfigurableCommandServer {
     await this.loadConfiguration();
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error("MCP Server running on stdio");
+    console.log("MCP Server running on stdio");
   }
 }
 
