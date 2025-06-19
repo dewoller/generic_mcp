@@ -1,0 +1,29 @@
+{
+  "tools": [
+    {
+      "name": "read_docs_by_list",
+      "description": "Read multiple documents (PDF, Word, HTML) using pandoc",
+      "command": "sh",
+      "args": ["-c", "for file in \"$@\"; do if [ -f \"$file\" ]; then echo \"=== $file ===\"; case \"$file\" in *.pdf) pdftotext -layout -nopgbrk \"$file\" - 2>/dev/null || echo \"Error: Cannot read PDF (install pdftotext)\";; *.html|*.htm) pandoc -f html -t plain \"$file\" --wrap=none 2>/dev/null || echo \"Error reading $file\";; *.doc|*.docx) pandoc -f docx -t plain \"$file\" --wrap=none 2>/dev/null || echo \"Error reading $file\";; *) echo \"Unsupported file type\";; esac; echo; else echo \"=== $file ===\"; echo \"Error: File not found\"; echo; fi; done", "--", "{files}"],
+      "parameters": {
+        "files": {
+          "type": "array",
+          "description": "Array of document paths to read (supports .pdf, .doc, .docx, .html, .htm)",
+          "required": true,
+          "items": {
+            "type": "string"
+          },
+          "pattern": "^[^\\x00-\\x1f;&|`$(){}\\[\\]<>'\"\\\\]+\\.(pdf|doc|docx|html|htm)$"
+        }
+      },
+      "allowedDirectories": ["/Users/dewoller"],
+      "requiresApproval": false,
+      "timeout": 120000,
+      "maxOutputSize": 104857600
+    }
+  ],
+  "security": {
+    "allowedCommands": ["sh", "pandoc", "pdftotext"],
+    "maxExecutionsPerMinute": 20
+  }
+}
